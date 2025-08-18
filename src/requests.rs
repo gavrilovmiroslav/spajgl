@@ -20,6 +20,7 @@ pub struct RegistrationResponse {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct LoginResponse {
     pub success: bool,
+    pub user_id: i32,
     pub token: String,
 }
 
@@ -44,7 +45,6 @@ pub struct GameRequest {
     pub timestamp: i64,
     pub token: String,
     pub session: i32,
-    pub salt: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]

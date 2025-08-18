@@ -37,11 +37,11 @@ pub async fn login(mut db: Connection<DB>, login_data: Json<LoginData>) -> Json<
                 .bind(token.to_string())
                 .execute(&mut **db).await;
 
-            (LoginResponse { success: true, token: token.to_string() }).into()
+            (LoginResponse { success: true, user_id, token: token.to_string() }).into()
         } else {
-            (LoginResponse { success: false, token: "".to_string() }).into()
+            (LoginResponse { success: false, user_id, token: "".to_string() }).into()
         }
     } else {
-        (LoginResponse { success: false, token: "".to_string() }).into()
+        (LoginResponse { success: false, user_id: -1, token: "".to_string() }).into()
     }
 }

@@ -9,7 +9,7 @@ use crate::requests::{GameRequest, GameResponse, LeaderboardEntry, LeaderboardSt
 
 #[post("/game/start", data="<game_data>", format="application/json")]
 pub async fn start_game(mut db: Connection<DB>, game_data: Json<GameRequest>) -> Json<GameResponse> {
-    let GameRequest{ token, user_id, session, timestamp, .. } = game_data.into_inner();
+    let GameRequest{ token, user_id, session, timestamp } = game_data.into_inner();
 
     if check_token(&mut db, &token, user_id).await {
         let mut sha256 = Sha256::new();

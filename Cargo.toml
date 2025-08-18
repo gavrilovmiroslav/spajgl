@@ -1,0 +1,14 @@
+[package]
+name = "spajgl"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rocket = { version = "0.5.1", features = ["json", "serde_json"] }
+rocket_db_pools = { version = "0.2.0", features = ["sqlx_sqlite"] }
+thiserror = "2.0.15"
+serde = "1.0.219"
+diesel = "2.2.12"
+database = "0.5.0"
+sha2 = "0.10.9"
+uuid = { version = "1.18.0", features = [ "v4" ] }

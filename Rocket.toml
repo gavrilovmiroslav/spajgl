@@ -1,0 +1,2 @@
+[default.databases.spajgl]
+url = "spajgl.sqlite"

@@ -15,7 +15,12 @@ pub async fn create_user(mut db: Connection<DB>, register_data: Json<RegisterDat
         .bind(username)
         .bind(hash)
         .execute(&mut **db).await;
-    (RegistrationResponse { success: result.is_ok() }).into()
+
+    if result.is_ok() {
+        (RegistrationResponse { success: true, reason: "".into() }).into()
+    } else {
+        (RegistrationResponse { success: false, reason: format!("{:?}", result) }).into()
+    }
 }
 
 #[post("/users/login", data="<login_data>", format="application/json")]

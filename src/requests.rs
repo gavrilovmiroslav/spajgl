@@ -15,6 +15,7 @@ pub struct RegisterData {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RegistrationResponse {
     pub success: bool,
+    pub reason: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]

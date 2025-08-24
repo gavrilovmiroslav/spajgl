@@ -1,2 +1,12 @@
+[default]
+address = "0.0.0.0"
+port = 8001
+secret_key = "5dlCzI1lvDF0EZhrtk2hNXyYdwqS1baXM0XizyujcYDvsW/SymqJpo8tvP1/hUglU61c4mXVx2G+OPEGCCvUng=="
+
 [default.databases.spajgl]
 url = "spajgl.sqlite"
+
+[default.tls]
+key = "/home/mika/spajgl/key.pem"
+certs = "/home/mika/spajgl/certs.pem"
+

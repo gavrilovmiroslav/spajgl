@@ -7,6 +7,6 @@ secret_key = "5dlCzI1lvDF0EZhrtk2hNXyYdwqS1baXM0XizyujcYDvsW/SymqJpo8tvP1/hUglU6
 url = "spajgl.sqlite"
 
 [default.tls]
-key = "/home/mika/spajgl/key.pem"
+key = "/home/mika/spajgl/private.key"
 certs = "/home/mika/spajgl/certs.pem"
 

@@ -1,25 +1,29 @@
 use rocket::serde::json::Json;
 use rocket_db_pools::{sqlx, Connection};
 use rocket_db_pools::sqlx::{Row};
-use sha2::{Digest, Sha256};
 use crate::DB;
 use crate::requests::{LoginData, LoginResponse, RegisterData, RegistrationResponse};
 
 #[post("/users/create", data="<register_data>", format="application/json")]
 pub async fn create_user(mut db: Connection<DB>, register_data: Json<RegisterData>) -> Json<RegistrationResponse> {
     let RegisterData{ username, password } = register_data.into_inner();
-    let mut sha256 = Sha256::new();
-    sha256.update(password);
-    let hash: String = format!("{:x}", sha256.finalize());
-    let result = sqlx::query("insert or ignore into users('username', 'password') values (?, ?)")
-        .bind(username)
-        .bind(hash)
-        .execute(&mut **db).await;
 
-    if result.is_ok() {
-        (RegistrationResponse { success: true, reason: "".into() }).into()
+    if let Ok(Some(_)) = sqlx::query("select * from users where username = ?")
+        .bind(&username)
+        .fetch_optional(&mut **db).await {
+        
+        (RegistrationResponse { success: false, reason: "User already exists".into() }).into()
     } else {
-        (RegistrationResponse { success: false, reason: format!("{:?}", result) }).into()
+        let result = sqlx::query("insert or ignore into users('username', 'password') values (?, ?)")
+            .bind(username)
+            .bind(password)
+            .execute(&mut **db).await;
+
+        if result.is_ok() {
+            (RegistrationResponse { success: true, reason: "".into() }).into()
+        } else {
+            (RegistrationResponse { success: false, reason: format!("{:?}", result) }).into()
+        }
     }
 }
 

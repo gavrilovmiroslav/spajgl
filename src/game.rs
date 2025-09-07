@@ -5,7 +5,7 @@ use rocket_db_pools::sqlx::sqlite::SqliteRow;
 use sha2::{Digest, Sha256};
 use crate::common::check_token;
 use crate::DB;
-use crate::requests::{GameRequest, GameResponse, LeaderboardEntry, LeaderboardState, ScoreRequest, ScoreResponse};
+use crate::requests::{GameRequest, GameResponse, LeaderboardEntry, LeaderboardState, ScoreRequest, ScoreResponse, LoadRequest, LoadResponse, CheckResponse, DataStoreRequest, DataLoadRequest, DataLoadResponse};
 
 #[post("/game/start", data="<game_data>", format="application/json")]
 pub async fn start_game(mut db: Connection<DB>, game_data: Json<GameRequest>) -> Json<GameResponse> {
@@ -26,6 +26,55 @@ pub async fn start_game(mut db: Connection<DB>, game_data: Json<GameRequest>) ->
     }
 
     (GameResponse { success: false, check: "".to_string() }).into()
+}
+
+#[post("/game/save", data="<score_data>", format="application/json")]
+pub async fn save_game(mut db: Connection<DB>, score_data: Json<ScoreRequest>) {
+    let ScoreRequest{ token, user_id, session, guesses, .. } = score_data.into_inner();
+
+    if check_token(&mut db, &token, user_id).await {
+        if let Ok(Some(row)) = sqlx::query("select id from games where user_id = ? and session = ?")
+            .bind(user_id)
+            .bind(session)
+            .fetch_optional(&mut **db).await {
+
+            let id: i32 = row.get(0);
+            let _ = sqlx::query("update games set guesses = ? where id = ?")
+                .bind(guesses)
+                .bind(id)
+                .execute(&mut **db).await;
+        }
+    }
+}
+
+#[post("/game/check_tokens", data="<load_data>", format="application/json")]
+pub async fn check_tokens(mut db: Connection<DB>, load_data: Json<LoadRequest>) -> Json<CheckResponse> {
+    let LoadRequest{ token, user_id, .. } = load_data.into_inner();
+    (CheckResponse { success: check_token(&mut db, &token, user_id).await }).into()
+}
+
+#[post("/game/load", data="<load_data>", format="application/json")]
+pub async fn load_game(mut db: Connection<DB>, load_data: Json<LoadRequest>) -> Json<LoadResponse> {
+    let LoadRequest{ token, user_id, session } = load_data.into_inner();
+    if check_token(&mut db, &token, user_id).await {
+        if let Ok(Some(row)) = sqlx::query("select id from games where user_id = ? and session = ?")
+            .bind(user_id)
+            .bind(session)
+            .fetch_optional(&mut **db).await {
+
+            let id: i32 = row.get(0);
+
+            if let Ok(Some(row)) = sqlx::query("select guesses from games where id = ?")
+                .bind(id)
+                .fetch_optional(&mut **db).await {
+
+                let guesses = row.get(0);
+                return (LoadResponse { success: true, guesses }).into();
+            }
+        }
+    }
+
+    (LoadResponse { success: false, guesses: "".into() }).into()
 }
 
 #[post("/game/submit", data="<score_data>", format="application/json")]
@@ -88,3 +137,27 @@ pub async fn get_leaderboard(mut db: Connection<DB>, session: i32) -> Json<Leade
         (LeaderboardState { entries: vec![] }).into()
     }
 }
+
+#[post("/game/store_data", data="<data_store>", format="application/json")]
+pub async fn store_data(mut db: Connection<DB>, data_store: Json<DataStoreRequest>) {
+    let DataStoreRequest{ key, value } = data_store.into_inner();
+    let _ = sqlx::query("insert or replace into kvdata('key', 'value') values (?, ?)")
+        .bind(key)
+        .bind(value)
+        .execute(&mut **db).await;
+}
+
+#[post("/game/get_data", data="<data_load>", format="application/json")]
+pub async fn get_data(mut db: Connection<DB>, data_load: Json<DataLoadRequest>) -> Json<DataLoadResponse> {
+    let DataLoadRequest{ key } = data_load.into_inner();
+    if let Ok(Some(row)) = sqlx::query("select value from kvdata where key = ?")
+        .bind(key)
+        .fetch_optional(&mut **db).await {
+        
+        let val: String = row.get(0);
+        (DataLoadResponse { success: true, value: val }).into()
+    } else {
+        (DataLoadResponse { success: false, value: "".to_string() }).into()
+    }
+}
+

@@ -13,6 +13,11 @@ pub struct RegisterData {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct CheckResponse {
+    pub success: bool,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct RegistrationResponse {
     pub success: bool,
     pub reason: String,
@@ -23,6 +28,19 @@ pub struct LoginResponse {
     pub success: bool,
     pub user_id: i32,
     pub token: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct LoadRequest {
+    pub user_id: i32,
+    pub token: String,
+    pub session: i32,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct LoadResponse {
+    pub success: bool,
+    pub guesses: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -67,3 +85,21 @@ pub struct LeaderboardEntry {
 pub struct LeaderboardState {
     pub entries: Vec<LeaderboardEntry>,
 }
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct DataStoreRequest {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct DataLoadRequest {
+    pub key: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct DataLoadResponse {
+    pub success: bool,
+    pub value: String,
+}
+

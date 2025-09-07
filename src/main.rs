@@ -6,7 +6,7 @@ mod common;
 #[macro_use] extern crate rocket;
 
 use rocket_db_pools::{sqlx, Database};
-use crate::game::{get_leaderboard, new_score, start_game};
+use crate::game::{get_leaderboard, new_score, start_game, load_game, save_game, check_tokens, store_data, get_data};
 use crate::users::{create_user, login};
 use rocket_cors::{AllowedOrigins, CorsOptions, AllowedHeaders};
 use rocket::http::Method;
@@ -42,5 +42,10 @@ fn rocket() -> _ {
             .merge(("address", "0.0.0.0"))
             .merge(("port", 8001))
         )
-        .mount("/", routes![create_user, login, start_game, new_score, get_leaderboard])
+        .mount("/", routes![
+            create_user, login, 
+            start_game, new_score, load_game, save_game, 
+            get_leaderboard, check_tokens,
+            store_data, get_data
+        ])
 }

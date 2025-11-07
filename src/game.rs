@@ -29,22 +29,34 @@ pub async fn start_game(mut db: Connection<DB>, game_data: Json<GameRequest>) ->
 }
 
 #[post("/game/save", data="<score_data>", format="application/json")]
-pub async fn save_game(mut db: Connection<DB>, score_data: Json<ScoreRequest>) {
-    let ScoreRequest{ token, user_id, session, guesses, .. } = score_data.into_inner();
-
+pub async fn save_game(mut db: Connection<DB>, score_data: Json<ScoreRequest>) -> Json<ScoreResponse> {
+    let ScoreRequest{ token, user_id, session, guesses, timestamp, .. } = score_data.into_inner();
     if check_token(&mut db, &token, user_id).await {
-        if let Ok(Some(row)) = sqlx::query("select id from games where user_id = ? and session = ?")
+        if let Ok(Some(row)) = sqlx::query("select id, timestamp from games where user_id = ? and session = ?")
             .bind(user_id)
             .bind(session)
             .fetch_optional(&mut **db).await {
 
             let id: i32 = row.get(0);
-            let _ = sqlx::query("update games set guesses = ? where id = ?")
+            let ts: i64 = row.get(1);
+
+            if ts >= timestamp {
+                return (ScoreResponse { success: false }).into();
+            }
+
+            let _ = sqlx::query("update games set guesses = ?, timestamp = ? where id = ?")
                 .bind(guesses)
+                .bind(timestamp)
                 .bind(id)
                 .execute(&mut **db).await;
         }
+        else
+        {
+            return (ScoreResponse { success: false }).into();
+        }
     }
+
+    (ScoreResponse { success: true }).into()
 }
 
 #[post("/game/check_tokens", data="<load_data>", format="application/json")]
@@ -74,7 +86,7 @@ pub async fn load_game(mut db: Connection<DB>, load_data: Json<LoadRequest>) -> 
         }
     }
 
-    (LoadResponse { success: false, guesses: "".into() }).into()
+    (LoadResponse { success: true, guesses: "".into() }).into()
 }
 
 #[post("/game/submit", data="<score_data>", format="application/json")]
